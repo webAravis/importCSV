@@ -1,0 +1,79 @@
+{extends file="importcsv.tpl"}
+
+{block name="step"}{intl l='importcsv.bo.default' l='Set up your import'}{/block}
+
+{block name="inner-content"}
+<div class="row">
+    <div class="col-md-7 title">{intl l='importcsv.bo.default' l="Please select your input file"}</div>
+</div>
+
+{if $error_message}
+<div class="row">
+    <div class="col-md-12">
+        <div class="alert alert-danger">{$error_message}</div>
+    </div>
+</div>
+{/if}
+{form name="ImportCSVForm"}
+    <form method="post" action="{url path='/admin/module/ImportCSV/import/0'}" {form_enctype form=$form} >
+        {form_hidden_fields form=$form}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    Votre fichier doit avoir les colonnes suivantes :
+                    <ul>
+                        <li>id: La référence du produit</li>
+                        <li>title: Le nom du produit</li>
+                        <li>rub0: La rubrique de niveau 0 du produit</li>
+                        <li>price: Le prix de la déclinaison</li>
+                        <li>promoprice: Le prix promo de la déclinaison</li>
+                        <li>stock: La quantité de la déclinaison </li>
+                    </ul>
+                    <br>
+                    Il est possible de préciser :
+                    <ul>
+                        <li>Des sous-rubriques: définies par les colonnes "rubX" où X est le niveau de la rubrique</li>
+                        <li>Des déclinaisons: définies par les colonnes "dec_X" où X est le nom de la déclinaison</li>
+                        <li>Des marques: définies par la colonne "brand"</li>
+                        <li>Des caractéristiques: définies par les colonnes "carac_X" où X est le nom de la caractéristique</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                 {custom_render_form_field form=$form field='language'}
+                    <select {form_field_attributes form=$form field='language'} >
+                    <option selected value="1">Français</option>
+                    <option value="2">English</option>
+                    <option value="3">Castellano</option>
+                    <option value="4">Italiano</option>
+                    <option value="7">Deutsch</option>
+                    </select>
+                {/custom_render_form_field}
+                
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                {render_form_field form=$form field="file_upload" value=""}
+                <div class="small">Accepted formats: .xml, .json, .csv, .zip</div>
+            </div>
+        </div>
+                
+    <div class="row">
+        <div class="col-md-12">
+            <div class="btn-toolbar" role="toolbar">
+                <a href="{url path='/admin/module/ImportCSV'}" class="btn btn-default"><span
+                        class="glyphicon glyphicon-backward"></span> {intl l='importcsv.bo.default' l="Previous"}</a>
+                <button type="submit" class="btn btn-primary pull-right">{intl l='importcsv.bo.default' l="Start import"} <span
+                        class="glyphicon glyphicon-forward"></span></button>
+            </div>
+            
+            {render_form_field form=$form field="url_file" value=""}
+            {render_form_field form=$form field="name_file" value=""}
+        </div>
+    </div>
+</form>
+{/form}
+{/block}
