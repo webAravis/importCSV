@@ -1,0 +1,36 @@
+{extends file="importcsv.tpl"}
+
+{block name="step"}{intl d='importcsv.bo.default' l='Welcome !'}{/block}
+
+{block name="inner-content"}
+<div class="row">
+    <div class="col-md-7 title">{intl d='importcsv.bo.default' l="Import from CSV"}</div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <p>
+            {intl d='importcsv.bo.default' l="This module will import a CSV into the local Thelia 2 database. The following
+            information will be imported :
+        <ul>
+            <li>Categories and subcategories</li>
+            <li>Brands</li>
+            <li>Features</li>
+            <li>Attributes</li>
+            <li>Products and pricing</li>
+        </ul>
+        
+        The module will ask you a few questions before starting the import process."}
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="btn-toolbar" role="toolbar">
+            <a href="{url path='/admin/module/ImportCSV/settingsCSV'}" class="btn btn-primary pull-right">{intl d='importcsv.bo.default' l="OK,
+                let's go !"} <span class="glyphicon glyphicon-forward"></span></a>
+        </div>
+    </div>
+</div>
+{/block}

@@ -1,0 +1,28 @@
+{extends file="importcsv.tpl"}
+
+{block name="step"}{intl d='importcsv.bo.default' l='Import finished'}{/block}
+
+{block name="inner-content"}
+    <div class="row">
+        <div class="col-md-7 title">{intl d='importcsv.bo.default' l="Congratulations, your import is now finished"}</div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <p>{intl d='importcsv.bo.default' l="The Thelia 1 database has been imported successfully."}</p>
+
+            {if ! empty($errors)}
+                <p>{intl d='importcsv.bo.default' l="However, <strong>{$total_errors} errors have been detected</strong>, please review them below. In most case, your database is consistent, but some informations have not been imported."}</p>
+            {/if}
+
+
+            <p>{intl d='importcsv.bo.default' l="You can check the whole import process in <a href=\"%log_url\" target=\"_log\">the log file</a>." log_url={url path='/admin/module/ImportCSV/show-log'}}</p>
+
+            <p>{intl d='importcsv.bo.default' l="Thank you for using Thelia 2 !"}</p>
+
+            {if ! empty($errors)}
+                <div class="errors well well-sm">{$errors nofilter}</div>
+            {/if}
+        </div>
+    </div>
+{/block}
