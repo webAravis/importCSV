@@ -1,0 +1,100 @@
+{extends file="importcsv.tpl"}
+
+{block name="step"}{$title}{/block}
+
+{block name="inner-content"}
+<div class="row">
+    <div class="col-md-7 title">{$title}</div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        {if $reload}
+            {$view_start=$start+1}
+            {$end=$start+$chunk_size}
+            <p>{intl d='importcsv.bo.default' l="Please wait, currently processing elements %start to %end" start=$view_start end=$end
+                object=$object}</p>
+
+            <p>{intl d='importcsv.bo.default' l="%start imported elements on %total total, %remaining to go, %errors error(s) for now (<a href=\"%log_url\" target=\"_log\">view complete log file</a>)." errors=$errors start=$start object=$object
+                remaining=$remaining total=$total log_url={url path='/admin/module/ImportCSV/show-log'}}</p>
+
+            <p>{intl d='importcsv.bo.default' l="This page will reload until all elements have beeen imported, please do not close your browser."}</p>
+            
+            {form name="ImportCSVForm"}
+            <form id="form-upload" method="post" action="{url path='/admin/module/ImportCSV/import/'}{$start}" {form_enctype form=$form} >
+    {form_hidden_fields form=$form}
+            {render_form_field form=$form field="url_file" value="{$file_import}"}
+            {render_form_field form=$form field="name_file" value="{$file_name}"}
+            {form_field form=$form field="language"}
+                <input type="hidden" name="{$name}" value="{$lang}" />
+             {/form_field}
+            </form>
+            {/form}
+        {else}
+            <p>{intl d='importcsv.bo.default' l="%total elements have been processed." object=$object total=$total}</p>
+            {if $errors > 0}
+                <p>{intl d='importcsv.bo.default' l="Total errors detected: %errors. Please <a href=\"%log_url\" target=\"_log\">check the complete log file</a> for details." object=$object errors=$errors log_url={url path='/admin/module/ImportCSV/show-log'}}</p>
+            {/if}
+        {/if}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="btn-toolbar" role="toolbar">
+            <a href="#" class="btn btn-danger stop"><span class="glyphicon glyphicon-remove"></span> {intl d='importcsv.bo.default' l="Stop"}</a>
+            <div class="continue"  style="display:none">
+                <a href="{$startover_route}" class="btn btn-info"><span class="glyphicon glyphicon-refresh"></span> {intl d='importcsv.bo.default' l="Start Over"}</a>
+                <a href="#" class="btn btn-primary continue"><span class="glyphicon glyphicon-forward"></span> {intl d='importcsv.bo.default' l="Resume"}</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{if ! empty($messages)}
+<div class="row">
+    <div class="col-md-12">
+        <div class="errors-container">
+
+            <div class="title">ERRORS DETECTED</div>
+
+            <div class="well well-sm">
+                {$messages nofilter}
+            </div>
+        </div>
+    </div>
+</div>
+{/if}
+{/block}
+
+{block name="javascript-initialization"}
+
+<script>
+    $(function () {
+         $('.stop').click(function(ev) {
+            try {
+                window.stop();
+            }
+            catch (ex) {
+                document.execCommand("Stop");
+            }
+            $(this).hide();
+            $('.continue').show();
+            ev.preventDefault();
+        });
+
+        $('.continue').click(function(ev) {
+            $('.continue').hide();
+            $('.stop').show();
+            window.location.reload();
+            ev.preventDefault();
+        });
+
+        {if $reload}
+            $('#form-upload').submit();
+        {else}
+        
+        {/if}
+    });
+</script>
+{/block}
