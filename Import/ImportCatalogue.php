@@ -28,12 +28,27 @@ use Thelia\Core\FileFormat\FormatType;
 use Thelia\Model\AttributeCombination;
 use Thelia\Model\Category;
 use Thelia\Model\CategoryQuery;
+use Thelia\Model\CategoryImageQuery;
+use Thelia\Model\CategoryDocumentQuery;
+use Thelia\Model\CategoryAssociatedContentQuery;
 use Thelia\Model\Currency;
 use Thelia\Model\FeatureProduct;
 use Thelia\Model\FeatureProductQuery;
+use Thelia\Model\Attribute;
+use Thelia\Model\AttributeQuery;
+use Thelia\Model\AttributeAv;
+use Thelia\Model\AttributeAvQuery;
+use Thelia\Model\Feature;
+use Thelia\Model\FeatureQuery;
+use Thelia\Model\FeatureAv;
+use Thelia\Model\FeatureAvQuery;
 use Thelia\Model\Product;
 use Thelia\Model\ProductPrice;
 use Thelia\Model\ProductPriceQuery;
+use Thelia\Model\ProductImage;
+use Thelia\Model\ProductImageQuery;
+use Thelia\Model\ProductDocument;
+use Thelia\Model\ProductDocumentQuery;
 use Thelia\Model\ProductQuery;
 use Thelia\Model\ProductSaleElements;
 use Thelia\Model\ProductSaleElementsQuery;
@@ -91,11 +106,33 @@ class ImportCatalogue extends BaseImport
         }
     }
 
-    public function import($startRecord = 0)
+    public function import($startRecord = 0, $lang = "FR", $reset = 0)
     {
         $errors = [];
         $nbLevels = 3;
         $cpt = 0;
+        
+        if ($reset) {
+            AttributeQuery::create()->deleteAll();
+            AttributeAvQuery::create()->deleteAll();
+            
+            FeatureQuery::create()->deleteAll();
+            FeatureAvQuery::create()->deleteAll();
+
+            ProductImageQuery::create()->deleteAll();
+            ProductDocumentQuery::create()->deleteAll();
+            
+            ProductQuery::create()->deleteAll();
+            CategoryQuery::create()->deleteAll();
+
+            CategoryImageQuery::create()->deleteAll();
+            CategoryDocumentQuery::create()->deleteAll();
+
+            CategoryAssociatedContentQuery::create()->deleteAll();
+
+            ProductSaleElementsQuery::create()->deleteAll();
+            ProductPriceQuery::create()->deleteAll();
+        }
         
         $max = $startRecord+$this->getChunkSize();
         if ($max > $this->getTotalCount()) {
@@ -414,7 +451,10 @@ class ImportCatalogue extends BaseImport
             
             $object->setLocale("fr_FR");
             $object->setTitle($title);
-            $object->setVisible(1);
+            
+            if (!($object_name == "Feature" || $object_name == "Attribute")) {
+                $object->setVisible(1);
+            }
 
             if ($object_name == "Category") {
                 $object->setParent($parent);

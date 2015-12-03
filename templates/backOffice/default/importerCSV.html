@@ -28,6 +28,9 @@
             {form_field form=$form field="language"}
                 <input type="hidden" name="{$name}" value="{$lang}" />
              {/form_field}
+            {form_field form=$form field="reset_catalog"}
+                <input type="hidden" name="{$name}" value="0" />
+             {/form_field}
             </form>
             {/form}
         {else}

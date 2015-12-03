@@ -52,6 +52,8 @@ class ImportCSVController extends BaseAdminController
             
             $boundForm = $this->validateForm($form);
 
+            $reset = $boundForm->get("reset_catalog")->getData();
+            
             if ($boundForm->has("url_file") && $boundForm->get("url_file")->getData() != "") {
                 $file = new UploadedFile($boundForm->get("url_file")->getData(),$boundForm->get("name_file")->getData());
             } else {
@@ -84,7 +86,7 @@ class ImportCSVController extends BaseAdminController
             /**
              * Process the import: dispatch events, format the file content and let the handler do it's job.
              */
-            $handler->import($start, $lang);
+            $handler->import($start, $lang, $reset);
             
         } catch (FormValidationException $e) {
             $errorMessage = $this->createStandardFormValidationErrorMessage($e);
