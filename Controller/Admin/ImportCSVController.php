@@ -18,6 +18,7 @@ use Thelia\Model\LangQuery;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Thelia\Form\Exception\FormValidationException;
 
 class ImportCSVController extends BaseAdminController
 {
