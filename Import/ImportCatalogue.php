@@ -23,6 +23,9 @@
 
 namespace ImportCSV\Import;
 
+use Thelia\Core\Event\FeatureProduct\FeatureProductDeleteEvent;
+use Thelia\Core\Event\FeatureProduct\FeatureProductUpdateEvent;
+use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\FileFormat\Formatting\FormatterData;
 use Thelia\Core\FileFormat\FormatType;
 use Thelia\Model\AttributeCombination;
@@ -61,10 +64,6 @@ class ImportCatalogue extends BaseImport
     private $tpl_corresp;
     private $tax_corresp;
     private $data;
-
-    public function __construct() {
-        
-    }
     
     public function initData($content,$lang = 1,$formatter)
     {
@@ -181,8 +180,15 @@ class ImportCatalogue extends BaseImport
                     foreach ($caracteristiques as $nomCaracteristique => $valeurCaracteristique) {
                         $idFeature = $this->createObjectIfNotExists($nomCaracteristique, "Feature");
 
-                        $idFeatureValue = $this->createObjectValueIfNotExists($valeurCaracteristique, $this->findObjectByTitle($nomCaracteristique, "Feature"), "Feature");
-                        $idFeatures[$idFeature] = $idFeatureValue;
+                        $idFeatures[$idFeature] = array();
+                        $arr_valeurs = explode(";", $valeurCaracteristique);
+                        
+                        foreach ($arr_valeurs as $valeurCaracteristique) {
+                            if ($valeurCaracteristique !== "") {
+                                $idFeatureValue = $this->createObjectValueIfNotExists($valeurCaracteristique, $this->findObjectByTitle($nomCaracteristique, "Feature"), "Feature");
+                                array_push($idFeatures[$idFeature], $idFeatureValue);
+                            }
+                        }
                     }
 
                     // Création fiche produit de base                
@@ -253,16 +259,19 @@ class ImportCatalogue extends BaseImport
         }
     }
     
-    protected function setFeaturesProduct($product_id, $array_features){
-        $this->deleteAllProductFeatures($product_id);
-        
-        foreach ($array_features as $featureId => $featureAvId) {
-            $featureProduct = new FeatureProduct();
-            $featureProduct->setProductId($product_id);
-            $featureProduct->setFeatureId($featureId);
-            $featureProduct->setFeatureAvId($featureAvId);
+    protected function setFeaturesProduct($productId, $array_features){
+        foreach ($array_features as $featureId => $featureValueList) {
+            // Delete all features av. for this feature.
+            $event = new FeatureProductDeleteEvent($productId, $featureId);
 
-            $featureProduct->save();
+            $this->dispatcher->dispatch(TheliaEvents::PRODUCT_FEATURE_DELETE_VALUE, $event);
+
+            // Add then all selected values
+            foreach ($featureValueList as $featureValue) {
+                $event = new FeatureProductUpdateEvent($productId, $featureId, $featureValue);
+
+                $this->dispatcher->dispatch(TheliaEvents::PRODUCT_FEATURE_UPDATE_VALUE, $event);
+            }
         }
     }
     

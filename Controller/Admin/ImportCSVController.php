@@ -49,7 +49,7 @@ class ImportCSVController extends BaseAdminController
         try {
             $archiveBuilderManager = $this->getArchiveBuilderManager($this->container);
             $formatterManager = $this->getFormatterManager($this->container);
-            $handler = new ImportCatalogue();
+            $handler = new ImportCatalogue($this->getDispatcher());
             
             $boundForm = $this->validateForm($form);
 
