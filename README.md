@@ -25,7 +25,7 @@ You can download the .zip file of this module or clone it into your project like
 
 ```
 cd /path-to-thelia
-git clone https://github.com/thelia-modules/importT1.git local/modules/ImportCSV
+git clone https://github.com/webAravis/importCSV.git local/modules/ImportCSV
 ```
 
 Next, go to your Thelia admin panel for module activation.
