@@ -1,5 +1,6 @@
 # ImportCSV module for Thelia 2 #
 
+<<<<<<< HEAD
 This module will import a Thelia 1.5.x database into the local Thelia 2 database. The following information will be imported :
 
 - Customers.
@@ -15,6 +16,14 @@ If you want to import images and documents, you'll have to provide the absolute 
 As the required folders are `client/gfx`, `client/document` and `client/commandes`, this is the only ones you need to copy on the local machine if your Thelia 1 installation is located 
 somewhere else.
 
+=======
+This module will import a CSV database into the local Thelia 2 database. The following information will be imported :
+
+- The complete catalog, with images and documents, features and attributes.
+
+**Be aware that the related content of your database will be deleted, so be sure to backup it before starting the importation process.**
+
+>>>>>>> f9fcf09327fc78ecaf1f47ccfcda5b6ccc59fbb4
 It is **recommended** to start the import process on a fresh Thelia 2 database, to prevent any inconsistencies
 
 ## How to install
@@ -25,6 +34,7 @@ You can download the .zip file of this module or clone it into your project like
 
 ```
 cd /path-to-thelia
+<<<<<<< HEAD
 git clone https://github.com/thelia-modules/importT1.git local/modules/ImportCSV
 ```
 
@@ -48,3 +58,9 @@ The whole importation process is logged in the `log/import-log.txt` file, which 
 ## Correspondance tables ##
 
 The importation process creates several t1_t2_xxxxxx tables in your Thelia 1 database. Once the importation is finished, you can safely delete these tables.
+=======
+git clone https://github.com/webAravis/importCSV.git local/modules/ImportCSV
+```
+
+Next, go to your Thelia admin panel for module activation.
+>>>>>>> f9fcf09327fc78ecaf1f47ccfcda5b6ccc59fbb4
