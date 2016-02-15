@@ -18,6 +18,7 @@ use Thelia\Model\LangQuery;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Thelia\Form\Exception\FormValidationException;
 
 class ImportCSVController extends BaseAdminController
 {
@@ -48,10 +49,12 @@ class ImportCSVController extends BaseAdminController
         try {
             $archiveBuilderManager = $this->getArchiveBuilderManager($this->container);
             $formatterManager = $this->getFormatterManager($this->container);
-            $handler = new ImportCatalogue();
+            $handler = new ImportCatalogue($this->getDispatcher());
             
             $boundForm = $this->validateForm($form);
 
+            $reset = $boundForm->get("reset_catalog")->getData();
+            
             if ($boundForm->has("url_file") && $boundForm->get("url_file")->getData() != "") {
                 $file = new UploadedFile($boundForm->get("url_file")->getData(),$boundForm->get("name_file")->getData());
             } else {
@@ -84,7 +87,7 @@ class ImportCSVController extends BaseAdminController
             /**
              * Process the import: dispatch events, format the file content and let the handler do it's job.
              */
-            $handler->import($start, $lang);
+            $handler->import($start, $lang, $reset);
             
         } catch (FormValidationException $e) {
             $errorMessage = $this->createStandardFormValidationErrorMessage($e);

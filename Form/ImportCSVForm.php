@@ -52,6 +52,11 @@ class ImportCSVForm extends BaseForm
                     ]),
                 ],
             ))
+            ->add("reset_catalog", "integer", array(
+                "label" => $this->translator->trans("Reset catalog"),
+                "label_attr" => ["for" => "reset_catalog"],
+                "required" => true
+            ))
         ;
     }
 

@@ -23,17 +23,35 @@
 
 namespace ImportCSV\Import;
 
+use Thelia\Core\Event\FeatureProduct\FeatureProductDeleteEvent;
+use Thelia\Core\Event\FeatureProduct\FeatureProductUpdateEvent;
+use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\FileFormat\Formatting\FormatterData;
 use Thelia\Core\FileFormat\FormatType;
 use Thelia\Model\AttributeCombination;
 use Thelia\Model\Category;
 use Thelia\Model\CategoryQuery;
+use Thelia\Model\CategoryImageQuery;
+use Thelia\Model\CategoryDocumentQuery;
+use Thelia\Model\CategoryAssociatedContentQuery;
 use Thelia\Model\Currency;
 use Thelia\Model\FeatureProduct;
 use Thelia\Model\FeatureProductQuery;
+use Thelia\Model\Attribute;
+use Thelia\Model\AttributeQuery;
+use Thelia\Model\AttributeAv;
+use Thelia\Model\AttributeAvQuery;
+use Thelia\Model\Feature;
+use Thelia\Model\FeatureQuery;
+use Thelia\Model\FeatureAv;
+use Thelia\Model\FeatureAvQuery;
 use Thelia\Model\Product;
 use Thelia\Model\ProductPrice;
 use Thelia\Model\ProductPriceQuery;
+use Thelia\Model\ProductImage;
+use Thelia\Model\ProductImageQuery;
+use Thelia\Model\ProductDocument;
+use Thelia\Model\ProductDocumentQuery;
 use Thelia\Model\ProductQuery;
 use Thelia\Model\ProductSaleElements;
 use Thelia\Model\ProductSaleElementsQuery;
@@ -46,10 +64,6 @@ class ImportCatalogue extends BaseImport
     private $tpl_corresp;
     private $tax_corresp;
     private $data;
-
-    public function __construct() {
-        
-    }
     
     public function initData($content,$lang = 1,$formatter)
     {
@@ -91,11 +105,33 @@ class ImportCatalogue extends BaseImport
         }
     }
 
-    public function import($startRecord = 0)
+    public function import($startRecord = 0, $lang = "FR", $reset = 0)
     {
         $errors = [];
         $nbLevels = 3;
         $cpt = 0;
+        
+        if ($reset) {
+            AttributeQuery::create()->deleteAll();
+            AttributeAvQuery::create()->deleteAll();
+            
+            FeatureQuery::create()->deleteAll();
+            FeatureAvQuery::create()->deleteAll();
+
+            ProductImageQuery::create()->deleteAll();
+            ProductDocumentQuery::create()->deleteAll();
+            
+            ProductQuery::create()->deleteAll();
+            CategoryQuery::create()->deleteAll();
+
+            CategoryImageQuery::create()->deleteAll();
+            CategoryDocumentQuery::create()->deleteAll();
+
+            CategoryAssociatedContentQuery::create()->deleteAll();
+
+            ProductSaleElementsQuery::create()->deleteAll();
+            ProductPriceQuery::create()->deleteAll();
+        }
         
         $max = $startRecord+$this->getChunkSize();
         if ($max > $this->getTotalCount()) {
@@ -127,10 +163,13 @@ class ImportCatalogue extends BaseImport
                         }
                     }
                     foreach ($declinaisons as $nomDeclinaison => $valeurdeclinaison) {
-                        $idDeclinaison = $this->createObjectIfNotExists($nomDeclinaison, "Attribute");
+                        $valeurdeclinaison = strtoupper($valeurdeclinaison);
+                        if (!empty($valeurdeclinaison)) {
+                            $idDeclinaison = $this->createObjectIfNotExists($nomDeclinaison, "Attribute");
 
-                        $idDeclinaisonValue = $this->createObjectValueIfNotExists($valeurdeclinaison, $this->findObjectByTitle($nomDeclinaison, "Attribute"), "Attribute");
-                        $idDeclinaisons[$idDeclinaison] = $idDeclinaisonValue;
+                            $idDeclinaisonValue = $this->createObjectValueIfNotExists($valeurdeclinaison, $this->findObjectByTitle($nomDeclinaison, "Attribute"), "Attribute");
+                            $idDeclinaisons[$idDeclinaison] = $idDeclinaisonValue;
+                        }
                     }
 
                     // Création des caractéristiques et valeurs de caractéristiques
@@ -144,8 +183,15 @@ class ImportCatalogue extends BaseImport
                     foreach ($caracteristiques as $nomCaracteristique => $valeurCaracteristique) {
                         $idFeature = $this->createObjectIfNotExists($nomCaracteristique, "Feature");
 
-                        $idFeatureValue = $this->createObjectValueIfNotExists($valeurCaracteristique, $this->findObjectByTitle($nomCaracteristique, "Feature"), "Feature");
-                        $idFeatures[$idFeature] = $idFeatureValue;
+                        $idFeatures[$idFeature] = array();
+                        $arr_valeurs = explode(";", $valeurCaracteristique);
+                        
+                        foreach ($arr_valeurs as $valeurCaracteristique) {
+                            if ($valeurCaracteristique !== "") {
+                                $idFeatureValue = $this->createObjectValueIfNotExists($valeurCaracteristique, $this->findObjectByTitle($nomCaracteristique, "Feature"), "Feature");
+                                array_push($idFeatures[$idFeature], $idFeatureValue);
+                            }
+                        }
                     }
 
                     // Création fiche produit de base                
@@ -172,10 +218,12 @@ class ImportCatalogue extends BaseImport
                         }
                     }
 
-                    $product_id = $this->createProductIfNotExists($row['title'], "Product", $categoryProduct, $row['price'], $row['brand'], $row['id']);
+                    $product_id = $this->createProductIfNotExists($row['title'], "Product", $categoryProduct, $row['price'], $row['stock'], $row['brand'], $row['id']);
 
                     // Création ProductSaleElement
-                    $this->createProductSaleElementIfNotExists($product_id, $idDeclinaisons, $row['price'], $row['promoprice'], $row['stock'], $row['id']);
+                    if (count($idDeclinaisons)) {
+                        $this->createProductSaleElementIfNotExists($product_id, $idDeclinaisons, $row['price'], $row['promoprice'], $row['stock'], $row['id']);
+                    }
 
                     $this->setFeaturesProduct($product_id, $idFeatures);
                 } catch (UnexpectedValueException $ex)
@@ -216,16 +264,19 @@ class ImportCatalogue extends BaseImport
         }
     }
     
-    protected function setFeaturesProduct($product_id, $array_features){
-        $this->deleteAllProductFeatures($product_id);
-        
-        foreach ($array_features as $featureId => $featureAvId) {
-            $featureProduct = new FeatureProduct();
-            $featureProduct->setProductId($product_id);
-            $featureProduct->setFeatureId($featureId);
-            $featureProduct->setFeatureAvId($featureAvId);
+    protected function setFeaturesProduct($productId, $array_features){
+        foreach ($array_features as $featureId => $featureValueList) {
+            // Delete all features av. for this feature.
+            $event = new FeatureProductDeleteEvent($productId, $featureId);
 
-            $featureProduct->save();
+            $this->dispatcher->dispatch(TheliaEvents::PRODUCT_FEATURE_DELETE_VALUE, $event);
+
+            // Add then all selected values
+            foreach ($featureValueList as $featureValue) {
+                $event = new FeatureProductUpdateEvent($productId, $featureId, $featureValue);
+
+                $this->dispatcher->dispatch(TheliaEvents::PRODUCT_FEATURE_UPDATE_VALUE, $event);
+            }
         }
     }
     
@@ -246,6 +297,7 @@ class ImportCatalogue extends BaseImport
     }
     
     protected function createProductSaleElementIfNotExists($product_id, $array_combinations, $price, $promoprice, $quantity, $pseref){
+        $price = str_replace(",", ".", $price);
         $pseid = $this->findProductSaleElement($product_id, $pseref);
         if ($pseid == -1) {
             $currency = Currency::getDefaultCurrency();
@@ -257,7 +309,12 @@ class ImportCatalogue extends BaseImport
             $pse->setProductId($product_id);
             $pse->setRef($pseref);
             $pse->setQuantity($quantity);
-            $pse->setIsDefault(1);
+            
+            if ($product->countSaleElements() == 1) {
+                $pse->setIsDefault(1);
+            } else {
+                $pse->setIsDefault(0);
+            }
 
             $pse->save();
 
@@ -295,7 +352,8 @@ class ImportCatalogue extends BaseImport
             $pseQuery = new ProductSaleElementsQuery();
             $pse = $pseQuery->findPk($pseid);
             
-            $pse->setQuantity($quantity);
+            $pse->setQuantity($quantity); 
+            $pse->save();
             
             $pricequery = ProductPriceQuery::create()
                 ->filterByProductSaleElementsId($pse->getId())
@@ -353,17 +411,19 @@ class ImportCatalogue extends BaseImport
         return -1;
     }
     
-    protected function createProductIfNotExists($title, $object_name, $parent, $base_price, $brand_name, $reference){
+    protected function createProductIfNotExists($title, $object_name, $parent, $base_price, $base_stock, $brand_name, $reference){
+        $base_price = str_replace(",", ".", $base_price);
         $tabParent = explode(";", $parent);
         
         $objectRef = $this->findObjectByTitle($title, $object_name, $tabParent[0]);
         if ($objectRef == -1) {
             $monProd = new Product();
             
-            $monProd->create($tabParent[0], $base_price, 1, 1, 1, 1);
+            $monProd->create($tabParent[0], $base_price, 1, 1, 1, $base_stock);
             $colPse = $monProd->getProductSaleElementss();
             foreach ($colPse as $pse){
-                $pse->setQuantity(0);
+                $pse->setQuantity($base_stock);
+                $pse->save();
             }
             $monProd->setLocale("fr_FR");
             $monProd->setTitle($title);
@@ -392,6 +452,11 @@ class ImportCatalogue extends BaseImport
             
             $monProd->setLocale("fr_FR");
             $monProd->setTitle($title);
+//            $colPse = $monProd->getProductSaleElementss();
+//            foreach ($colPse as $pse){
+//                $pse->setQuantity($base_stock);
+//                $pse->save();
+//            }
             $monProd->setBrandId($this->findObjectByTitle($brand_name, "Brand"));
             $monProd->save();
         }
@@ -414,7 +479,10 @@ class ImportCatalogue extends BaseImport
             
             $object->setLocale("fr_FR");
             $object->setTitle($title);
-            $object->setVisible(1);
+            
+            if (!($object_name == "Feature" || $object_name == "Attribute")) {
+                $object->setVisible(1);
+            }
 
             if ($object_name == "Category") {
                 $object->setParent($parent);

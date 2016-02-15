@@ -60,6 +60,17 @@
                 <div class="small">Accepted formats: .xml, .json, .csv, .zip</div>
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-12">
+                 {custom_render_form_field form=$form field='reset_catalog'}
+                    <select {form_field_attributes form=$form field='reset_catalog'} >
+                    <option selected value="0">Non</option>
+                    <option value="1">Oui</option>
+                    </select>
+                {/custom_render_form_field}
+                
+            </div>
+        </div>
                 
     <div class="row">
         <div class="col-md-12">
