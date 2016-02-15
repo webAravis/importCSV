@@ -20,3 +20,7 @@ git clone https://github.com/webAravis/importCSV.git local/modules/ImportCSV
 ```
 
 Next, go to your Thelia admin panel for module activation.
+
+## Exemple file
+
+A file named exemple_import.csv will show you the typical csv layout used to import products in your installation. You can use it as a base.
