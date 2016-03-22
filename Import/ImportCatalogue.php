@@ -163,7 +163,6 @@ class ImportCatalogue extends BaseImport
                         }
                     }
                     foreach ($declinaisons as $nomDeclinaison => $valeurdeclinaison) {
-<<<<<<< HEAD
                         $valeurdeclinaison = strtoupper($valeurdeclinaison);
                         if (!empty($valeurdeclinaison)) {
                             $idDeclinaison = $this->createObjectIfNotExists($nomDeclinaison, "Attribute");
@@ -171,12 +170,6 @@ class ImportCatalogue extends BaseImport
                             $idDeclinaisonValue = $this->createObjectValueIfNotExists($valeurdeclinaison, $this->findObjectByTitle($nomDeclinaison, "Attribute"), "Attribute");
                             $idDeclinaisons[$idDeclinaison] = $idDeclinaisonValue;
                         }
-=======
-                        $idDeclinaison = $this->createObjectIfNotExists($nomDeclinaison, "Attribute");
-
-                        $idDeclinaisonValue = $this->createObjectValueIfNotExists($valeurdeclinaison, $this->findObjectByTitle($nomDeclinaison, "Attribute"), "Attribute");
-                        $idDeclinaisons[$idDeclinaison] = $idDeclinaisonValue;
->>>>>>> f9fcf09327fc78ecaf1f47ccfcda5b6ccc59fbb4
                     }
 
                     // Création des caractéristiques et valeurs de caractéristiques
@@ -225,19 +218,12 @@ class ImportCatalogue extends BaseImport
                         }
                     }
 
-<<<<<<< HEAD
                     $product_id = $this->createProductIfNotExists($row['title'], "Product", $categoryProduct, $row['price'], $row['stock'], $row['brand'], $row['id']);
 
                     // Création ProductSaleElement
                     if (count($idDeclinaisons)) {
                         $this->createProductSaleElementIfNotExists($product_id, $idDeclinaisons, $row['price'], $row['promoprice'], $row['stock'], $row['id']);
                     }
-=======
-                    $product_id = $this->createProductIfNotExists($row['title'], "Product", $categoryProduct, $row['price'], $row['brand'], $row['id']);
-
-                    // Création ProductSaleElement
-                    $this->createProductSaleElementIfNotExists($product_id, $idDeclinaisons, $row['price'], $row['promoprice'], $row['stock'], $row['id']);
->>>>>>> f9fcf09327fc78ecaf1f47ccfcda5b6ccc59fbb4
 
                     $this->setFeaturesProduct($product_id, $idFeatures);
                 } catch (UnexpectedValueException $ex)
@@ -311,10 +297,7 @@ class ImportCatalogue extends BaseImport
     }
     
     protected function createProductSaleElementIfNotExists($product_id, $array_combinations, $price, $promoprice, $quantity, $pseref){
-<<<<<<< HEAD
         $price = str_replace(",", ".", $price);
-=======
->>>>>>> f9fcf09327fc78ecaf1f47ccfcda5b6ccc59fbb4
         $pseid = $this->findProductSaleElement($product_id, $pseref);
         if ($pseid == -1) {
             $currency = Currency::getDefaultCurrency();
@@ -326,16 +309,12 @@ class ImportCatalogue extends BaseImport
             $pse->setProductId($product_id);
             $pse->setRef($pseref);
             $pse->setQuantity($quantity);
-<<<<<<< HEAD
             
             if ($product->countSaleElements() == 1) {
                 $pse->setIsDefault(1);
             } else {
                 $pse->setIsDefault(0);
             }
-=======
-            $pse->setIsDefault(1);
->>>>>>> f9fcf09327fc78ecaf1f47ccfcda5b6ccc59fbb4
 
             $pse->save();
 
@@ -373,12 +352,8 @@ class ImportCatalogue extends BaseImport
             $pseQuery = new ProductSaleElementsQuery();
             $pse = $pseQuery->findPk($pseid);
             
-<<<<<<< HEAD
             $pse->setQuantity($quantity); 
             $pse->save();
-=======
-            $pse->setQuantity($quantity);
->>>>>>> f9fcf09327fc78ecaf1f47ccfcda5b6ccc59fbb4
             
             $pricequery = ProductPriceQuery::create()
                 ->filterByProductSaleElementsId($pse->getId())
@@ -436,30 +411,19 @@ class ImportCatalogue extends BaseImport
         return -1;
     }
     
-<<<<<<< HEAD
     protected function createProductIfNotExists($title, $object_name, $parent, $base_price, $base_stock, $brand_name, $reference){
         $base_price = str_replace(",", ".", $base_price);
-=======
-    protected function createProductIfNotExists($title, $object_name, $parent, $base_price, $brand_name, $reference){
->>>>>>> f9fcf09327fc78ecaf1f47ccfcda5b6ccc59fbb4
         $tabParent = explode(";", $parent);
         
         $objectRef = $this->findObjectByTitle($title, $object_name, $tabParent[0]);
         if ($objectRef == -1) {
             $monProd = new Product();
             
-<<<<<<< HEAD
             $monProd->create($tabParent[0], $base_price, 1, 1, 1, $base_stock);
             $colPse = $monProd->getProductSaleElementss();
             foreach ($colPse as $pse){
                 $pse->setQuantity($base_stock);
                 $pse->save();
-=======
-            $monProd->create($tabParent[0], $base_price, 1, 1, 1, 1);
-            $colPse = $monProd->getProductSaleElementss();
-            foreach ($colPse as $pse){
-                $pse->setQuantity(0);
->>>>>>> f9fcf09327fc78ecaf1f47ccfcda5b6ccc59fbb4
             }
             $monProd->setLocale("fr_FR");
             $monProd->setTitle($title);
@@ -488,14 +452,11 @@ class ImportCatalogue extends BaseImport
             
             $monProd->setLocale("fr_FR");
             $monProd->setTitle($title);
-<<<<<<< HEAD
 //            $colPse = $monProd->getProductSaleElementss();
 //            foreach ($colPse as $pse){
 //                $pse->setQuantity($base_stock);
 //                $pse->save();
 //            }
-=======
->>>>>>> f9fcf09327fc78ecaf1f47ccfcda5b6ccc59fbb4
             $monProd->setBrandId($this->findObjectByTitle($brand_name, "Brand"));
             $monProd->save();
         }
