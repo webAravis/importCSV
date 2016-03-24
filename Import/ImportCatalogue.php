@@ -64,13 +64,14 @@ class ImportCatalogue extends BaseImport
     private $tpl_corresp;
     private $tax_corresp;
     private $data;
-    
+    private $nbLevels = 0;
+
     public function initData($content,$lang = 1,$formatter)
     {
         $this->data = $formatter
             ->decode($content)
             ->setLang($lang)
-        ;
+        ; 
     }
 
     public function getChunkSize()
@@ -108,7 +109,6 @@ class ImportCatalogue extends BaseImport
     public function import($startRecord = 0, $lang = "FR", $reset = 0)
     {
         $errors = [];
-        $nbLevels = 3;
         $cpt = 0;
         
         if ($reset) {
@@ -147,12 +147,24 @@ class ImportCatalogue extends BaseImport
                      * Check for mandatory columns
                      */
                     $this->checkMandatoryColumns($row);
-
+                    
+                    if ($this->nbLevels === 0) {
+                        foreach ($row as $key => $value) {
+                            if (strpos($key, 'rub') === 0) {
+                                $this->nbLevels++;
+                            }
+                        }
+                    }
+                    
                     // Creation de la structure du catalogue (catégories)
-                    $this->createStructureCatalogue($nbLevels, $row);
+                    $this->createStructureCatalogue($this->nbLevels, $row);
 
                     // Création des marques
-                    $this->createObjectIfNotExists($row['brand'], "Brand");
+                    $brand_name = "";
+                    if (isset($row['brand'])&&!empty($row['brand'])) {
+                        $brand_name = $row['brand'];
+                        $this->createObjectIfNotExists($brand_name, "Brand");
+                    }
 
                     // Création des déclinaisons et valeurs de déclinaisons
                     $declinaisons = array();
@@ -196,7 +208,7 @@ class ImportCatalogue extends BaseImport
 
                     // Création fiche produit de base                
                     $categoryProduct = 0;
-                    for ($index = 0; $index < $nbLevels; $index++) {
+                    for ($index = 0; $index < $this->nbLevels; $index++) {
                         $colonne = "rub".$index;
                         if ($row[$colonne] != "") {
                             $catParent = $categoryProduct;
@@ -218,7 +230,7 @@ class ImportCatalogue extends BaseImport
                         }
                     }
 
-                    $product_id = $this->createProductIfNotExists($row['title'], "Product", $categoryProduct, $row['price'], $row['stock'], $row['brand'], $row['id']);
+                    $product_id = $this->createProductIfNotExists($row['title'], "Product", $categoryProduct, $row['price'], $row['stock'], $brand_name, $row['id']);
 
                     // Création ProductSaleElement
                     if (count($idDeclinaisons)) {
@@ -427,7 +439,9 @@ class ImportCatalogue extends BaseImport
             }
             $monProd->setLocale("fr_FR");
             $monProd->setTitle($title);
-            $monProd->setBrandId($this->findObjectByTitle($brand_name, "Brand"));
+            if ($brand_name != "") {
+                $monProd->setBrandId($this->findObjectByTitle($brand_name, "Brand"));
+            }
             $monProd->setVisible(1);
             $monProd->setRef($reference);
             $monProd->setTemplateId(1);
@@ -457,7 +471,9 @@ class ImportCatalogue extends BaseImport
 //                $pse->setQuantity($base_stock);
 //                $pse->save();
 //            }
-            $monProd->setBrandId($this->findObjectByTitle($brand_name, "Brand"));
+            if ($brand_name != "") {
+                $monProd->setBrandId($this->findObjectByTitle($brand_name, "Brand"));
+            }
             $monProd->save();
         }
         
@@ -556,7 +572,7 @@ class ImportCatalogue extends BaseImport
 
     protected function getMandatoryColumns()
     {
-        return ["id", "rub0", "price", "stock", "brand", "title"];
+        return ["id", "rub0", "price", "stock", "title"];
     }
 
     /**

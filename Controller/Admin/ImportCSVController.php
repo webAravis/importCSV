@@ -63,7 +63,7 @@ class ImportCSVController extends BaseAdminController
             
             $langData = $boundForm->get("language")->getData();
             $lang = LangQuery::create()->findPk(
-                $boundForm->get("language")->getData()
+                $langData
             );
             /**
              * We have to check the extension manually because of composed file formats as tar.gz or tar.bz2
@@ -139,7 +139,7 @@ class ImportCSVController extends BaseAdminController
                 'lang' => $langData
             )
         );
-    }
+    } 
     
     public function importDoneAction(){
          
