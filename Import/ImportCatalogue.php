@@ -237,7 +237,9 @@ class ImportCatalogue extends BaseImport
                         $this->createProductSaleElementIfNotExists($product_id, $idDeclinaisons, $row['price'], $row['promoprice'], $row['stock'], $row['id']);
                     }
 
-                    $this->setFeaturesProduct($product_id, $idFeatures);
+                    if (count($idFeatures)) {
+                        $this->setFeaturesProduct($product_id, $idFeatures);
+                    }
                 } catch (UnexpectedValueException $ex)
                 {
     //                echo 'Ex : '.$ex."<br />";
